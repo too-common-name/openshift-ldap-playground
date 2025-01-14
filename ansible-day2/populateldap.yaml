@@ -5,6 +5,8 @@
   vars_files:
     - vault.yml 
   vars:
+    ldap_server_uri: "ldap://openldap.openldap.svc.cluster.local"
+    ldap_bind_dn: "cn=admin,dc=wayneenterprises,dc=org"
     ldap_tree:
       # OU
       - { dn: "ou=people,dc=wayneenterprises,dc=org", object_class: ["top", "organizationalUnit"], attributes: { ou: "people" } }
@@ -29,8 +31,8 @@
           - gcc
           - make
           - g++
-          - python-devel
-          - openldap-devel
+          - "{{ python_dev_package }}"
+          - "{{ openldap_dev_package }}"
         state: present
     - name: Ensure python-ldap
       pip:
@@ -46,3 +48,12 @@
         bind_dn: "{{ ldap_bind_dn }}"
         bind_pw: "{{ ldap_bind_pw }}"
       loop: "{{ ldap_tree }}"
+
+  pre_tasks:
+    - name: Set Python development package based on OS
+      set_fact:
+        python_dev_package: "{{ 'python3-dev' if ansible_facts.os_family == 'Debian' else 'python-devel' }}"
+
+    - name: Set OpenLDAP development package based on OS
+      set_fact:
+        openldap_dev_package: "{{ 'openldap-dev' if ansible_facts.os_family == 'Debian' else 'openldap-devel' }}"
