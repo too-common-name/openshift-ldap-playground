@@ -1,0 +1,17 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    app: phpldapadmin
+    app.kubernetes.io/component: phpldapadmin
+    app.kubernetes.io/instance: phpldapadmin
+  name: phpldapadmin
+spec:
+  port:
+    targetPort: 80-tcp
+  tls:
+    termination: edge
+  to:
+    kind: Service
+    name: phpldapadmin
+    weight: 100
