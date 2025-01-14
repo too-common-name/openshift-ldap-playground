@@ -1,8 +1,8 @@
 [allowlist]
-  description = "Global Allowlist"
+description = "Global Allowlist"
 
-  # Ignore based on any subset of the file path
-  paths = [
-    '''\/manifests\/openldap\/adminsecret.yaml''',
-    '''\/manifests\/openldap\/readonlysecret.yaml''',
-  ]
+# Ignore based on any subset of the file path
+paths = [
+  '''\/deployments\/openldap\/adminsecret.yaml''',
+  '''\/deployments\/openldap\/readonlysecret.yaml'''
+]

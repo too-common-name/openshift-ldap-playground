@@ -1,5 +1,5 @@
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: openldap
 roleRef:
@@ -8,5 +8,5 @@ roleRef:
   name: system:openshift:scc:anyuid
 subjects:
 - kind: ServiceAccount
-  name: openldap-sa
+  name: openldap
   namespace: openldap
