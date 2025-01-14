@@ -52,8 +52,22 @@
   pre_tasks:
     - name: Set Python development package based on OS
       set_fact:
-        python_dev_package: "{{ 'python3-dev' if ansible_facts.os_family == 'Debian' else 'python-devel' }}"
-
+        python_dev_package: >-
+          {% if ansible_facts.os_family == 'Alpine' %}
+            python3-dev
+          {% elif ansible_facts.os_family == 'Debian' %}
+            python3-dev
+          {% else %}
+            python-devel
+          {% endif %}
+    
     - name: Set OpenLDAP development package based on OS
       set_fact:
-        openldap_dev_package: "{{ 'openldap-dev' if ansible_facts.os_family == 'Debian' else 'openldap-devel' }}"
+        openldap_dev_package: >-
+          {% if ansible_facts.os_family == 'Alpine' %}
+            openldap-dev
+          {% elif ansible_facts.os_family == 'Debian' %}
+            libldap2-dev
+          {% else %}
+            openldap-devel
+          {% endif %}
