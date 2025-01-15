@@ -11,7 +11,7 @@ ldap_tree:
   - { dn: "uid=carolinecrown,ou=people,dc=wayneenterprises,dc=org", object_class: ["inetOrgPerson"], attributes: { cn: "Caroline Crown", sn: "Crown", uid: "carolinecrown", mail: "caroline.crown@wayneenterprises.org", userPassword: "{{ user_passwords.carolinecrown }}" } }
   - { dn: "uid=alfredpennyworth,ou=people,dc=wayneenterprises,dc=org", object_class: ["inetOrgPerson"], attributes: { cn: "Alfred Pennyworth", sn: "Pennyworth", uid: "alfredpennyworth", mail: "alfred.pennyworth@wayneenterprises.org", userPassword: "{{ user_passwords.alfredpennyworth }}" } }
   # GROUPS
-  - { dn: "cn=marketing,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "marketing", uniqueMember: ["uid=carolinecrown,ou=people,dc=wayneenterprises,dc=org"] } }
-  - { dn: "cn=sales,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "sales", uniqueMember: ["uid=alfredpennyworth,ou=people,dc=wayneenterprises,dc=org"] } }
-  - { dn: "cn=devops,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "devops", uniqueMember: ["uid=brucewayne,ou=people,dc=wayneenterprises,dc=org"] } }
-  - { dn: "cn=developers,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "developers", uniqueMember: ["uid=luciusfox,ou=people,dc=wayneenterprises,dc=org"] } }
+  - { dn: "cn=marketing,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "marketing", uniqueMember: ["uid=brucewayne,ou=people,dc=wayneenterprises,dc=org"] } }
+  - { dn: "cn=sales,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "sales", uniqueMember: ["uid=carolinecrown,ou=people,dc=wayneenterprises,dc=org"] } }
+  - { dn: "cn=devops,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "devops", uniqueMember: ["uid=luciusfox,ou=people,dc=wayneenterprises,dc=org"] } }
+  - { dn: "cn=developers,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfUniqueNames"], attributes: { cn: "developers", uniqueMember: ["uid=alfredpennyworth,ou=people,dc=wayneenterprises,dc=org"] } }
