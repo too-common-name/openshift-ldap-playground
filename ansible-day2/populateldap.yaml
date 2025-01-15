@@ -3,7 +3,7 @@
   hosts: localhost
   connection: local
   vars_files:
-    - vault.yml 
+    - vault.yaml 
   vars:
     ldap_server_uri: "ldap://openldap.openldap.svc.cluster.local"
     ldap_bind_dn: "cn=admin,dc=wayneenterprises,dc=org"
