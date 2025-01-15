@@ -5,6 +5,8 @@
   vars_files:
     - vault.yaml 
     - vars/ldap_info.yaml
+  vars:
+    - ansible_python_interpreter: /usr/local/bin/python
   tasks:
     - name: Ensure GCC and development tools are installed
       become: true
