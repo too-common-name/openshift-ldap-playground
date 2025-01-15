@@ -4,25 +4,7 @@
   connection: local
   vars_files:
     - vault.yaml 
-  vars:
-    ldap_server_uri: "ldap://openldap.openldap.svc.cluster.local"
-    ldap_bind_dn: "cn=admin,dc=wayneenterprises,dc=org"
-    ldap_tree:
-      # OU
-      - { dn: "ou=people,dc=wayneenterprises,dc=org", object_class: ["top", "organizationalUnit"], attributes: { ou: "people" } }
-      - { dn: "ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "organizationalUnit"], attributes: { ou: "groups" } }
-      # USERS
-      - { dn: "uid=brucewayne,ou=people,dc=wayneenterprises,dc=org", object_class: ["inetOrgPerson"], attributes: { cn: "Bruce Wayne", sn: "Wayne", uid: "brucewayne", mail: "bruce.wayne@wayneenterprises.org", userPassword: "{{ user_passwords.brucewayne | password_hash('sha512') }}" } }
-      - { dn: "uid=luciusfox,ou=people,dc=wayneenterprises,dc=org", object_class: ["inetOrgPerson"], attributes: { cn: "Lucius Fox", sn: "Fox", uid: "luciusfox", mail: "lucius.fox@wayneenterprises.org", userPassword: "{{ user_passwords.luciusfox | password_hash('sha512') }}" } }
-      - { dn: "uid=carolinecrown,ou=people,dc=wayneenterprises,dc=org", object_class: ["inetOrgPerson"], attributes: { cn: "Caroline Crown", sn: "Crown", uid: "carolinecrown", mail: "caroline.crown@wayneenterprises.org", userPassword: "{{ user_passwords.carolinecrown | password_hash('sha512') }}" } }
-      - { dn: "uid=alfredpennyworth,ou=people,dc=wayneenterprises,dc=org", object_class: ["inetOrgPerson"], attributes: { cn: "Alfred Pennyworth", sn: "Pennyworth", uid: "alfredpennyworth", mail: "alfred.pennyworth@wayneenterprises.org", userPassword: "{{ user_passwords.alfredpennyworth | password_hash('sha512') }}" } }
-      # GROUPS
-      - { dn: "cn=engineers,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfNames"], attributes: { cn: "engineers", member: ["uid=brucewayne,ou=people,dc=wayneenterprises,dc=org", "uid=luciusfox,ou=people,dc=wayneenterprises,dc=org"] } }
-      - { dn: "cn=marketing,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfNames"], attributes: { cn: "marketing", member: ["uid=carolinecrown,ou=people,dc=wayneenterprises,dc=org"] } }
-      - { dn: "cn=sales,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfNames"], attributes: { cn: "sales", member: ["uid=alfredpennyworth,ou=people,dc=wayneenterprises,dc=org"] } }
-      - { dn: "cn=devops,cn=engineers,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfNames"], attributes: { cn: "devops", member: ["uid=brucewayne,ou=people,dc=wayneenterprises,dc=org"] } }
-      - { dn: "cn=developers,cn=engineers,ou=groups,dc=wayneenterprises,dc=org", object_class: ["top", "groupOfNames"], attributes: { cn: "developers", member: ["uid=luciusfox,ou=people,dc=wayneenterprises,dc=org"] } }
-
+    - vars/ldap_info.yaml
   tasks:
     - name: Ensure GCC and development tools are installed
       become: true
@@ -38,6 +20,7 @@
       pip:
         name:
           - python-ldap
+          - passlib # crypt will be removed starting from 2.17
         state: present
     - name: Creazione dei nodi LDAP
       community.general.ldap_entry:
