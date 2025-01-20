@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ansible
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: git-clone
+          image: "docker.io/alpine/git:v2.47.1"
+          args:
+          - clone
+          - https://github.com/too-common-name/openshift-ldap-playground.git 
+          - /repo
+          volumeMounts:
+            - name: git-repo-volume
+              mountPath: /repo   
+      containers:
+        - name: ansible
+          image: "docker.io/alpine/ansible:2.16.1"
+          args:
+          - "ansible-playbook"
+          - "/repo/ansible-day2/populateldap.yaml"
+          - "--vault-password-file"
+          - "/vault/vault-password.txt"
+          volumeMounts:
+            - name: git-repo-volume
+              mountPath: /repo 
+            - name: vault-password
+              mountPath: /vault  
+      volumes:
+        - name: git-repo-volume
+          emptyDir: {}  
+        - name: vault-password
+          secret:
+            secretName: vault-password
