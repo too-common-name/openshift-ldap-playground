@@ -1,0 +1,128 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: phpldapadmin-template
+  annotations:
+    description: "Template to deploy phpLDAPadmin with required resources"
+parameters:
+  - name: PHPLDAPADMIN_NAMESPACE
+    displayName: "phpLDAPadmin Namespace"
+    required: true
+  - name: OPENLDAP_APP_NAME
+    displayName: "OpenLDAP app name"
+    required: true
+  - name: OPENLDAP_NAMESPACE
+    displayName: "OpenLDAP Namespace"
+    required: true
+
+objects:
+  - kind: Project
+    apiVersion: v1
+    metadata:
+      name: ${PHPLDAPADMIN_NAMESPACE}
+
+  - kind: ServiceAccount
+    apiVersion: v1
+    metadata:
+      name: phpldapadmin
+      namespace: ${PHPLDAPADMIN_NAMESPACE}
+
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: phpldapadmin
+      namespace: ${PHPLDAPADMIN_NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: system:openshift:scc:anyuid
+    subjects:
+      - kind: ServiceAccount
+        name: phpldapadmin
+        namespace: ${PHPLDAPADMIN_NAMESPACE}
+
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: phpldapadmin
+      namespace: ${PHPLDAPADMIN_NAMESPACE}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: phpldapadmin
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 25%
+          maxUnavailable: 25%
+      template:
+        metadata:
+          labels:
+            app: phpldapadmin
+        spec:
+          serviceAccountName: phpldapadmin
+          containers:
+            - name: phpldapadmin
+              image: osixia/phpldapadmin:latest
+              ports:
+                - containerPort: 80
+                  protocol: TCP
+              env:
+                - name: PHPLDAPADMIN_HTTPS
+                  value: "false"
+                - name: PHPLDAPADMIN_LDAP_HOSTS
+                  value: ${OPENLDAP_APP_NAME}.${OPENLDAP_NAMESPACE}.svc.cluster.local
+              resources: {}
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: 80
+                initialDelaySeconds: 30
+                periodSeconds: 10
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 80
+                initialDelaySeconds: 5
+                periodSeconds: 10
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /container/service/phpldapadmin/assets/config/
+          volumes:
+            - name: config-volume
+              configMap:
+                name: phpldapadmin-config
+
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: phpldapadmin-service
+      namespace: ${PHPLDAPADMIN_NAMESPACE}
+    spec:
+      ports:
+      - name: 80-tcp
+        port: 80
+        protocol: TCP
+        targetPort: 80
+      - name: 443-tcp
+        port: 443
+        protocol: TCP
+        targetPort: 443
+      selector:
+        app: phpldapadmin
+      type: ClusterIP
+
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: phpldapadmin-route
+      namespace: ${PHPLDAPADMIN_NAMESPACE}
+    spec:
+      to:
+        kind: Service
+        name: phpldapadmin-service
+      port:
+        targetPort: http
+      tls:
+        termination: edge

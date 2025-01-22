@@ -1,0 +1,82 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: ansible-automation-env-template
+  annotations:
+    description: "Template to deploy Ansible automation job with required resources"
+parameters:
+  - name: ANSIBLE_NAMESPACE
+    displayName: "Ansible Namespace"
+    required: true
+objects:
+  - kind: Project
+    apiVersion: project.openshift.io/v1
+    metadata:
+      name: ${ANSIBLE_NAMESPACE}
+  
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: ansible
+      namespace: ${ANSIBLE_NAMESPACE}
+  
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: ansible
+      namespace: ${ANSIBLE_NAMESPACE}
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: system:openshift:scc:anyuid
+    subjects:
+    - kind: ServiceAccount
+      name: ansible
+      namespace: ${ANSIBLE_NAMESPACE}
+
+  - apiVersion: v1
+    data:
+      vault-password.txt: aWwwdjNWQHVsVAo= # notsecret
+    kind: Secret
+    metadata:
+      name: vault-password
+      namespace: ${ANSIBLE_NAMESPACE}
+
+  - apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: ansible
+      namespace: ${ANSIBLE_NAMESPACE}
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          initContainers:
+            - name: git-clone
+              image: "docker.io/alpine/git:v2.47.1"
+              args:
+              - clone
+              - https://github.com/too-common-name/openshift-ldap-playground.git 
+              - /repo
+              volumeMounts:
+                - name: git-repo-volume
+                  mountPath: /repo   
+          containers:
+            - name: ansible
+              image: "docker.io/alpine/ansible:2.16.1"
+              args:
+              - "ansible-playbook"
+              - "/repo/ansible-day2/populateldap.yaml"
+              - "--vault-password-file"
+              - "/vault/vault-password.txt"
+              volumeMounts:
+                - name: git-repo-volume
+                  mountPath: /repo 
+                - name: vault-password
+                  mountPath: /vault  
+          volumes:
+            - name: git-repo-volume
+              emptyDir: {}  
+            - name: vault-password
+              secret:
+                secretName: vault-password

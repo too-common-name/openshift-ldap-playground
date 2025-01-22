@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonLabels:
+  app: sealed-secrets
+namespace: sealed-secrets
+resources:
+- secret.yaml
+- github.com/bitnami-labs/sealed-secrets/releases/download/v0.23.0/controller.yaml
+
+patchesJson6902:
+- target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: sealed-secrets-controller
+  path: sc-patch.yaml
