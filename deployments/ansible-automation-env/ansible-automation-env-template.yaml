@@ -74,6 +74,7 @@ objects:
                   mountPath: /repo 
                 - name: vault-password
                   mountPath: /vault  
+          serviceAccountName: ansible
           volumes:
             - name: git-repo-volume
               emptyDir: {}  

@@ -8,7 +8,7 @@ parameters:
   - name: PHPLDAPADMIN_NAMESPACE
     displayName: "phpLDAPadmin Namespace"
     required: true
-  - name: OPENLDAP_APP_NAME
+  - name: OPENLDAP_APP_SVC
     displayName: "OpenLDAP app name"
     required: true
   - name: OPENLDAP_NAMESPACE
@@ -72,7 +72,7 @@ objects:
                 - name: PHPLDAPADMIN_HTTPS
                   value: "false"
                 - name: PHPLDAPADMIN_LDAP_HOSTS
-                  value: ${OPENLDAP_APP_NAME}.${OPENLDAP_NAMESPACE}.svc.cluster.local
+                  value: ${OPENLDAP_APP_SVC}.${OPENLDAP_NAMESPACE}.svc.cluster.local
               resources: {}
               livenessProbe:
                 httpGet:
@@ -86,13 +86,12 @@ objects:
                   port: 80
                 initialDelaySeconds: 5
                 periodSeconds: 10
-              volumeMounts:
-                - name: config-volume
-                  mountPath: /container/service/phpldapadmin/assets/config/
+                volumeMounts:
+                - mountPath: /var/www/phpldapadmin
+                  name: phpldapadmin-volume-1
           volumes:
-            - name: config-volume
-              configMap:
-                name: phpldapadmin-config
+            - emptyDir: {}
+              name: phpldapadmin-volume-1
 
   - kind: Service
     apiVersion: v1
@@ -123,6 +122,6 @@ objects:
         kind: Service
         name: phpldapadmin-service
       port:
-        targetPort: http
+        targetPort: 80-tcp
       tls:
         termination: edge

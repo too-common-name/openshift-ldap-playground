@@ -5,7 +5,7 @@ commonLabels:
 namespace: sealed-secrets
 resources:
 - secret.yaml
-- github.com/bitnami-labs/sealed-secrets/releases/download/v0.23.0/controller.yaml
+- controller.yaml
 
 patchesJson6902:
 - target:

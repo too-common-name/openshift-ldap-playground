@@ -15,101 +15,97 @@ YELLOW='\033[1;33m'
 BLUE='\033[1;34m'
 NC='\033[0m' # No color
 
-OC_COMMAND=$(command -v oc)
-RETRIES=30
-DELAY=5
-
 OPENLDAP_NAMESPACE=openldap
 PHPLDAPADMIN_NAMESPACE=phpldapadmin
 AUTOMATION_NAMESPACE=ansible-automation
 SEALED_SECRETS_NAMESPACE=sealed-secrets
 
-delete_project_if_exists() {
-  for namespace in "$OPENLDAP_NAMESPACE" "$PHPLDAPADMIN_NAMESPACE" "$AUTOMATION_NAMESPACE" "$SEALED_SECRETS_NAMESPACE"; do
-    if oc get project "$namespace" &>/dev/null; then
-      echo -e "${BLUE}Deleting existing project $namespace...${NC}"
-      oc delete project "$namespace" --grace-period=0 --force &>/dev/null
-    fi
-  done
+OC_COMMAND=$(command -v oc)
+LOG_FILE="deployment.log"
+
+handle_error() {
+  local exit_code=${2:-$?} # Use the second argument or the exit status of the last command if not provided
+  if [ $exit_code -ne 0 ]; then
+    echo -e "${RED} ✘ $1${NC}"
+    echo "ERROR: $1" >> $LOG_FILE
+    exit $exit_code
+  fi
+}
+
+cleanup() {
+  echo "Starting components installation" > $LOG_FILE
+
+  echo -e "${YELLOW} ⚠ Deleting resources for OpenLDAP from template...${NC}"
+  oc process -f deployments/openldap/openldap-template.yaml -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
+
+  echo -e "${YELLOW} ⚠ Deleting resources for phpLDAPadmin from template...${NC}"
+  oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
+
+  echo -e "${YELLOW} ⚠ Deleting resources for Ansible Automation Environment from template...${NC}"
+  oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc delete -f - &>> $LOG_FILE
+
+  echo -e "${YELLOW} ⚠ Deleting Sealed Secrets resources using Kustomize...${NC}"
+  oc delete -k deployments/sealed-secrets &>> $LOG_FILE
+  oc delete project "$SEALED_SECRETS_NAMESPACE" --grace-period=0 --force &>> $LOG_FILE
 }
 
 check_oc_installed() {
   if [ -z "$OC_COMMAND" ]; then
-    echo -e "${RED}✘ 'oc' command not found. Please install the OpenShift CLI.${NC}"
+    echo -e "${RED} ✘ 'oc' command not found. Please install the OpenShift CLI.${NC}"
     exit 1
   fi
 }
 
 login_to_openshift() {
-  echo -e "${BLUE}Logging in to OpenShift...${NC}"
-
-  if ! oc login "$OPENSHIFT_URL" -u "$USERNAME" -p "$PASSWORD" --insecure-skip-tls-verify &>/dev/null; then
-    echo -e "${RED}✘ Failed to log in to OpenShift.${NC}"
-    exit 1
-  fi
-  echo -e "${GREEN}✔ Successfully logged in to OpenShift.${NC}"
-}
-
-apply_kustomize_resource() {
-  local resource_path=$1
-  echo -e "${BLUE}Applying resources from $resource_path...${NC}"
-
-  if oc create -k "$resource_path"; then
-    echo -e "${GREEN}✔ Successfully applied resources from $resource_path.${NC}"
-  else
-    echo -e "${RED}✘ Failed to apply resources from $resource_path. Exiting.${NC}"
-    exit 1
-  fi
+  echo -e "${BLUE} ➜ Logging in to OpenShift...${NC}"
+  oc login "$OPENSHIFT_URL" -u "$USERNAME" -p "$PASSWORD" --insecure-skip-tls-verify &>> $LOG_FILE
+  handle_error "Failed to log in to OpenShift"
+  echo -e "${GREEN} ✔ Successfully logged in to OpenShift.${NC}"
 }
 
 install_sealed_secret() {
-  apply_kustomize_resource "deployments/sealed-secrets/"
+  echo -e "${BLUE} ➜ Creating Sealed Secrets namespace...${NC}"
+  oc new-project $SEALED_SECRETS_NAMESPACE &>> $LOG_FILE
+  handle_error "Failed to create Sealed Secrets project"
+  
+  echo -e "${BLUE} ➜ Installing Sealed Secrets...${NC}"
+  oc create -k deployments/sealed-secrets/ &>> $LOG_FILE
+  handle_error "Failed to install Sealed Secrets"
 }
 
 create_openldap_server() {
-  apply_kustomize_resource "deployments/openldap/"
+  echo -e "${BLUE} ➜ Processing OpenLDAP Template...${NC}"
+  oc process -f deployments/openldap/openldap-template.yaml -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  handle_error "Failed to deploy OpenLDAP from template"
+  
+  echo -e "${BLUE} ➜ Waiting for LDAP server to be deployed...${NC}"
+  oc wait --for=condition=available --timeout=100s deployment/openldap -n openldap &>> $LOG_FILE
+  handle_error "LDAP server not deployed successfully"
 }
 
 create_phpldapadmin() {
-  apply_kustomize_resource "deployments/phpldapadmin/"
-}
-
-wait_for_ldap_server() {
-  echo -e "${BLUE}Waiting for OpenLDAP server pods to be in 'Running' state...${NC}"
-  for ((i=1; i<=RETRIES; i++)); do
-    if oc -n "$OPENLDAP_NAMESPACE" get pods --selector deployment=openldap -o jsonpath='{.items[*].status.phase}' | grep -q "Running"; then
-      echo -e "${GREEN}✔ All OpenLDAP pods are running.${NC}"
-      return 0
-    fi
-
-    echo -e "${YELLOW}🛆 Attempt $i/${RETRIES}: Not all pods are running. Retrying in $DELAY seconds...${NC}"
-    sleep $DELAY
-  done
-
-  echo -e "${RED}✘ Timed out waiting for OpenLDAP pods to reach 'Running' state. Cannot continue.${NC}"
-  exit 1
+  echo -e "${BLUE} ➜ Processing phpLDAPadmin Template...${NC}"
+  oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  handle_error "Failed to deploy phpLDAPadmin from template"
 }
 
 populate_ldap_server() {
-  apply_kustomize_resource "deployments/ansible-automation-env/"
-  echo -e "${BLUE}Waiting for Ansible automation job to complete...${NC}"
+  echo -e "${BLUE} ➜ Processing automation environment Template...${NC}"
+  oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  handle_error "Failed to deploy automation environment from template"
 
-  if oc wait --for=condition=complete job/ansible -n "$AUTOMATION_NAMESPACE" --timeout=$((RETRIES * DELAY))s; then
-    echo -e "${GREEN}✔ Automation job completed successfully. LDAP server populated.${NC}"
-    oc delete project "$AUTOMATION_NAMESPACE"
-  else
-    echo -e "${RED}✘ Automation job did not complete within the expected time. Exiting.${NC}"
-    exit 1
-  fi
+  echo -e "${BLUE} ➜ Waiting for automation job to complete...${NC}"
+  oc wait --for=condition=complete --timeout=200s job/ansible -n $AUTOMATION_NAMESPACE &>> $LOG_FILE
+  handle_error "Ansible job did not complete successfully"
 }
 
-
+# Start the deployment process
 check_oc_installed
 login_to_openshift
-delete_project_if_exists
-create_openldap_server
+cleanup
+install_sealed_secret
 create_phpldapadmin
-wait_for_ldap_server
+create_openldap_server
 populate_ldap_server
 
-echo -e "${GREEN}✔ Setup completed successfully.${NC}"
+echo -e "${GREEN} ✔ Setup completed successfully.${NC}"
