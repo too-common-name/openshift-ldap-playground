@@ -64,6 +64,31 @@ objects:
     - kind: ServiceAccount
       name: openldap
       namespace: ${OPENLDAP_NAMESPACE}
+  
+  # Database and config PVC
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: database-pv-claim
+      namespace: ${OPENLDAP_NAMESPACE}
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: "3Gi"
+
+  - kind: PersistentVolumeClaim
+    apiVersion: v1
+    metadata:
+      name: configuration-pv-claim
+      namespace: ${OPENLDAP_NAMESPACE}
+    spec:
+      accessModes:
+        - ReadWriteMany
+      resources:
+        requests:
+          storage: "1Gi"
 
   # Deployment
   - kind: Deployment
@@ -88,10 +113,22 @@ objects:
           labels:
             deployment: openldap
         spec:
+          volumes:
+            - name: database-storage
+              persistentVolumeClaim:
+                claimName: database-pv-claim
+            - name: configuration-storage
+              persistentVolumeClaim:
+                claimName: configuration-pv-claim
           containers:
           - name: openldap
             image: docker.io/osixia/openldap@sha256:11a30708d9224291c39b2eed1d2620eb9687f4b8411e3b9dac6362ff634794c2
             imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - name: database-storage
+                mountPath: /var/lib/ldap
+              - name: configuration-storage
+                mountPath: /etc/ldap/slapd.d
             ports:
             - containerPort: 389
               protocol: TCP
