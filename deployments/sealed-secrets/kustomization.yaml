@@ -7,10 +7,10 @@ resources:
 - secret.yaml
 - controller.yaml
 
-patchesJson6902:
+patches:
 - target:
-    group: apps
-    version: v1
     kind: Deployment
     name: sealed-secrets-controller
+    group: apps
+    version: v1
   path: sc-patch.yaml
