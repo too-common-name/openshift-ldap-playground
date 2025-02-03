@@ -1,0 +1,21 @@
+- op: add
+  path: /spec/identityProviders/-
+  value:
+    ldap:
+      attributes:
+        email:
+          - mail
+        id:
+          - dn
+        name:
+          - cn
+        preferredUsername:
+          - uid
+      bindDN: 'cn=readonly,dc=wayneenterprises,dc=org'
+      bindPassword:
+        name: ldap-secret
+      insecure: true
+      url: 'ldap://openldap.openldap.svc.cluster.local:389/ou=people,dc=wayneenterprises,dc=org?uid?sub?(|(memberOf=cn=devops,ou=groups,dc=wayneenterprises,dc=org)(memberOf=cn=developers,ou=groups,dc=wayneenterprises,dc=org))'
+    mappingMethod: claim
+    name: Wayne Enterprise LDAP 
+    type: LDAP

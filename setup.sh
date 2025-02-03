@@ -1,19 +1,20 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
-  echo "Usage: $0 <OPENSHIFT_URL> <USERNAME> <PASSWORD>"
+if [ $# -lt 3 ]; then
+  echo "Usage: $0 <OPENSHIFT_URL> <USERNAME> <PASSWORD> [cleanup]"
   exit 1
 fi
 
 OPENSHIFT_URL=$1
 USERNAME=$2
 PASSWORD=$3
+ACTION=$4
 
 RED='\033[1;31m' 
 GREEN='\033[1;32m' 
 YELLOW='\033[1;33m' 
 BLUE='\033[1;34m'
-NC='\033[0m' # No color
+NC='\033[0m'
 
 OPENLDAP_NAMESPACE=openldap
 PHPLDAPADMIN_NAMESPACE=phpldapadmin
@@ -24,7 +25,7 @@ OC_COMMAND=$(command -v oc)
 LOG_FILE="deployment.log"
 
 handle_error() {
-  local exit_code=${2:-$?} # Use the second argument or the exit status of the last command if not provided
+  local exit_code=${2:-$?}
   if [ $exit_code -ne 0 ]; then
     echo -e "${RED} ✘ $1${NC}"
     echo "ERROR: $1" >> $LOG_FILE
@@ -33,8 +34,14 @@ handle_error() {
 }
 
 cleanup() {
-  echo "Starting components installation" > $LOG_FILE
+  echo "Starting cleanup" > $LOG_FILE
 
+  if [ -e deployments/auth-server/oauth-cluster.yaml ]; then
+    echo -e "${YELLOW} ⚠ Restoring the OAuth server...${NC}"
+    oc apply -f deployments/auth-server/oauth-cluster.yaml &>> $LOG_FILE
+  fi 
+  oc delete secret/ldap-secret -n openshift-config &>> $LOG_FILE
+  
   echo -e "${YELLOW} ⚠ Deleting resources for OpenLDAP from template...${NC}"
   oc process -f deployments/openldap/openldap-template.yaml -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
@@ -99,13 +106,24 @@ populate_ldap_server() {
   handle_error "Ansible job did not complete successfully"
 }
 
-# Start the deployment process
-check_oc_installed
-login_to_openshift
-cleanup
-install_sealed_secret
-create_phpldapadmin
-create_openldap_server
-populate_ldap_server
+configure_oauth_server() {
+  oc get oauth/cluster -n openshift-config -o yaml | yq e "del(.metadata.annotations, .metadata.ownerReferences, .metadata.resourceVersion, .metadata.uid, .metadata.generation)" > deployments/auth-server/oauth-cluster.yaml
+  oc apply -k deployments/auth-server &>> $LOG_FILE
+}
 
-echo -e "${GREEN} ✔ Setup completed successfully.${NC}"
+
+if [ "$ACTION" == "cleanup" ]; then
+  echo -e "${BLUE} ➜ Performing cleanup...${NC}"
+  cleanup
+  echo -e "${GREEN} ✔ Cleanup completed successfully.${NC}"
+else
+  check_oc_installed
+  login_to_openshift
+  cleanup
+  install_sealed_secret
+  create_phpldapadmin
+  create_openldap_server
+  populate_ldap_server
+  configure_oauth_server
+  echo -e "${GREEN} ✔ Setup completed successfully.${NC}"
+fi

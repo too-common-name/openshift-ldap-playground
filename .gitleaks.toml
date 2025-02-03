@@ -8,5 +8,6 @@ paths = [
   '''deployments\/openldap\/ansible-automation-env-template.yaml''',
   '''certificates\/''',
   '''deployments\/sealed-secrets\/secret.yaml''',
+  '''deployments\/auth-server\/ldap-secret.yaml''',
   '''setup.py'''
 ]
