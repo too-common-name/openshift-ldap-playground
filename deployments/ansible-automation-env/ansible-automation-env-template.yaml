@@ -34,13 +34,18 @@ objects:
       name: ansible
       namespace: ${ANSIBLE_NAMESPACE}
 
-  - apiVersion: v1
-    data:
-      vault-password.txt: aWwwdjNWQHVsVAo= # notsecret
-    kind: Secret
+  - kind: SealedSecret
+    apiVersion: bitnami.com/v1alpha1
     metadata:
       name: vault-password
       namespace: ${ANSIBLE_NAMESPACE}
+    spec:
+      encryptedData:
+        vault-password.txt: AgCdoLpyERUB3Cg+gVTXd7Y+o5absCA46NBmh8xyC//VgaDpTNmu4xzwHF7yG2vxFSPPsHk5dqnZTtricBPG+gNcODGm11pA5R6aU8sFRk0f4P0K9jq4y48DKTlLBezAKdfIGQ/vF5AnTs6phDnkt4iG1kCszlmmb9XWielOsotTTTx7dhXAqAz2n+NcUYfzAKeBc6TNna45ZF+VcY5qzVXzDbGsatKeUEn4DmwTP7ap5Kqeo89MyZw91UWBc6LRA1Bw3S1d5r1halMQzt85Is13DnOb7ZxHMDuuekX19lPOs/IuUcJ7dfWpLDaY84Tx59+GrnAfm+XQhScawSXzU6YCIBocZJgxxWR0iVUvzOVD2wDku2J9yRhLLvmTs1CMyY+mxVVbToP+ItPw1gLOhaHVLNF8oe//XmZ3kISq7lVcoOFQZd9eXlq1ZDiwaM+PSRW9XSUAU1dTRiIUNC9VY0+gIrb5UyWAzAUCNIpbJUj704CA0Otatl3sII2Qbvo10kir6H8eEjhRl/w2bO9MPL8sQxYVRbrUKqQFtOOv/a6DPNjQsAFWSbefJwqJQ3Tcv3dnoGnvX3O6i+VrrbX1Yy18ryqsaNhftTCnAPtUTonBEhuoqhhKy4hMviNrkxCwF9Ud606Sg6uFAljpVRFzOAEgPVmGicE4ieTpJFIl54oOyX7wurkn0652R5Z1Gl6pMU68Q+VTJsFn7oSnug==
+      template:
+        metadata:
+          name: vault-password
+          namespace: ${ANSIBLE_NAMESPACE}
 
   - apiVersion: batch/v1
     kind: Job

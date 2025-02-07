@@ -20,6 +20,7 @@ OPENLDAP_NAMESPACE=openldap
 PHPLDAPADMIN_NAMESPACE=phpldapadmin
 AUTOMATION_NAMESPACE=ansible-automation
 SEALED_SECRETS_NAMESPACE=sealed-secrets
+GROUP_SYNCER_NAMESPACE=group-syncer
 
 OC_COMMAND=$(command -v oc)
 LOG_FILE="deployment.log"
@@ -50,6 +51,9 @@ cleanup() {
 
   echo -e "${YELLOW} ⚠ Deleting resources for Ansible Automation Environment from template...${NC}"
   oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc delete -f - &>> $LOG_FILE
+
+  echo -e "${YELLOW} ⚠ Deleting resources for group syncer cronjob from template...${NC}"
+  oc process -f deployments/group-syncer/group-syncer-template.yaml -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting Sealed Secrets resources using Kustomize...${NC}"
   oc delete -k deployments/sealed-secrets &>> $LOG_FILE
@@ -107,8 +111,16 @@ populate_ldap_server() {
 }
 
 configure_oauth_server() {
+  echo -e "${BLUE} ➜ Patching OAuth server...${NC}"
   oc get oauth/cluster -n openshift-config -o yaml | yq e "del(.metadata.annotations, .metadata.ownerReferences, .metadata.resourceVersion, .metadata.uid, .metadata.generation)" > deployments/auth-server/oauth-cluster.yaml
   oc apply -k deployments/auth-server &>> $LOG_FILE
+  handle_error "Failed to patch OAuth server"
+}
+
+configure_group_sync() {
+  echo -e "${BLUE} ➜ Creating group sync cronjob...${NC}"
+  oc process -f deployments/group-syncer/group-syncer-template.yaml -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  handle_error "Failed to deploy group sync cronjob from template"
 }
 
 
@@ -125,5 +137,6 @@ else
   create_openldap_server
   populate_ldap_server
   configure_oauth_server
+  configure_group_sync
   echo -e "${GREEN} ✔ Setup completed successfully.${NC}"
 fi
