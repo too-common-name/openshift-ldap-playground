@@ -1,0 +1,121 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: group-syncer-template
+  annotations:
+    description: "Template to deploy the LDAP group syncer cronjob"
+parameters:
+  - name: GROUP_SYNCER_NAMESPACE
+    displayName: "Group syncer cronjob Namespace"
+    required: true
+objects:
+  - kind: Project
+    apiVersion: project.openshift.io/v1
+    metadata:
+      name: ${GROUP_SYNCER_NAMESPACE}
+  - kind: ServiceAccount
+    apiVersion: v1
+    metadata:
+      name: ldap-group-syncer
+      namespace: ${GROUP_SYNCER_NAMESPACE}
+  - kind: ClusterRole
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: ldap-group-syncer
+    rules:
+    - apiGroups:
+      - user.openshift.io
+      resources:
+      - groups
+      verbs:
+      - get
+      - list
+      - create
+      - update
+  - kind: ClusterRoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: ldap-group-syncer
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: ldap-group-syncer
+    subjects:
+    - kind: ServiceAccount
+      name: ldap-group-syncer
+      namespace: ${GROUP_SYNCER_NAMESPACE}
+  - kind: SealedSecret
+    apiVersion: bitnami.com/v1alpha1
+    metadata:
+      name: ldap-secret
+      namespace: ${GROUP_SYNCER_NAMESPACE}
+    spec:
+      encryptedData:
+        bindPassword: AgAv4qDBGbdadpen9Ad0MWn4D3ju0KYCXeVeg5JcxnR7ZMWMCNcL3Fu71HRmbclUhyUOjKyhTQTTqHEku6Ah2fCU/cHqJXqBZKjWG6F9kE2PqGWqFYz/8DXmG4/uc/b+odI0yRW6wTE74Brb2wYtKD/I8y5q16H0ZeVjAW5dNB/OLq/Srh8M9zWXNMBGOBgF7AvCZ/vrsN7SSa6TjTAAGaQbaiCoa/lUsC4gsWAdr52t1mDu0lzcObgVa9al98gIQqB4qB6odrij+osQZPEK+rr2f+Nackju6rtaeDzZ/7oUeFKtvz4l55eBW5AyrxysOe2+Xmbv5Ej3sM442/Y4E0gNqC7uWiFSrvHcapJRDyQ0GA6D6iJo3L7mR8I+9xn82iIBv6vEZ0wLijw1bRlYAVHTHEdD3aWWweZMDSoUTkowBAZ9t29ZCBtFydXRbI6kZx0uU6SXvXgtr1aL6gLjaExyT/NZsEh1efiA61KVuAwHHiiE2e1lLhEeSE3ILmEbjB9iAQQXocnK6fTOxMwruhhqU60eBDFXnud3if8CxhtqLhVfXVrWTz6gxmIji5KgVcGKcT9iuFvJGzZ0mUhjcqGefujZeYX+HnNwQ/VyYW7xqaoPbC70a4vuLxrXpBDsWZXuNs6r1zT1UL8m3HjehTR9hoS7hPNvFyNzbVPVtdI6sfdBq96gnYg0CpK4us6viLe/Gtc0TlGf7Fcd5g==
+      template:
+        metadata:
+          name: ldap-secret
+          namespace: ${GROUP_SYNCER_NAMESPACE}
+  - kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      name: ldap-group-sync
+      namespace: ${GROUP_SYNCER_NAMESPACE}
+    data:
+      ldap-sync.yaml: |                                 
+        kind: LDAPSyncConfig
+        apiVersion: v1
+        url: ldap://openldap.openldap.svc.cluster.local:389                  
+        bindDN: cn=readonly,dc=wayneenterprises,dc=org
+        bindPassword:
+          file: /etc/secrets/bindPassword
+        insecure: true   
+        augmentedActiveDirectory:
+            groupsQuery:
+                baseDN: "ou=groups,dc=wayneenterprises,dc=org"
+                scope: sub
+                derefAliases: never
+                pageSize: 0
+            groupUIDAttribute: dn 
+            groupNameAttributes: [ cn ] 
+            usersQuery:
+                baseDN: "ou=people,dc=wayneenterprises,dc=org"
+                scope: sub
+                derefAliases: never
+                filter: (objectclass=inetOrgPerson)
+                pageSize: 0
+            userNameAttributes: [ mail ] 
+            groupMembershipAttributes: [ memberOf ] 
+  - kind: CronJob
+    apiVersion: batch/v1
+    metadata:
+      name: ldap-group-sync
+      namespace: ${GROUP_SYNCER_NAMESPACE}
+    spec:
+      schedule: "*/1 * * * *"
+      jobTemplate:
+        spec:
+          template:
+            spec:
+              restartPolicy: Never
+              containers:
+                - name: ldap-group-sync
+                  image: "docker.io/appuio/oc:v4.15"
+                  command:
+                    - "/bin/sh"
+                    - "-c"
+                    - "oc adm groups sync --sync-config=/etc/config/ldap-sync.yaml --confirm"
+                  volumeMounts:
+                    - mountPath: "/etc/config"
+                      name: "ldap-sync-volume"
+                    - mountPath: "/etc/secrets"
+                      name: "ldap-bind-password"
+              volumes:
+                - name: "ldap-sync-volume"
+                  configMap:
+                    name: "ldap-group-sync"
+                - name: "ldap-bind-password"
+                  secret:
+                    secretName: "ldap-secret"
+              serviceAccountName: ldap-group-syncer
+              serviceAccount: ldap-group-syncer
