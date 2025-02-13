@@ -3,6 +3,5 @@ description = "Global Allowlist"
 
 # Ignore based on any subset of the file path
 paths = [
-  '''certificates\/'''
   '''deployments\/sealed-secrets\/secret.yaml'''
 ]
