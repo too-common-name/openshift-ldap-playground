@@ -153,7 +153,6 @@ spec:
         securityContext:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
-          runAsUser: 1001
         stdin: false
         tty: false
         volumeMounts:
@@ -161,8 +160,7 @@ spec:
           name: tmp
       imagePullSecrets: []
       initContainers: []
-      securityContext:
-        fsGroup: 65534
+      securityContext: {}
       serviceAccountName: sealed-secrets-controller
       terminationGracePeriodSeconds: 30
       volumes:

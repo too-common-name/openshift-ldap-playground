@@ -47,13 +47,19 @@ objects:
   - kind: SealedSecret
     apiVersion: bitnami.com/v1alpha1
     metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      creationTimestamp: null
       name: ldap-secret
       namespace: ${GROUP_SYNCER_NAMESPACE}
     spec:
       encryptedData:
-        bindPassword: AgAv4qDBGbdadpen9Ad0MWn4D3ju0KYCXeVeg5JcxnR7ZMWMCNcL3Fu71HRmbclUhyUOjKyhTQTTqHEku6Ah2fCU/cHqJXqBZKjWG6F9kE2PqGWqFYz/8DXmG4/uc/b+odI0yRW6wTE74Brb2wYtKD/I8y5q16H0ZeVjAW5dNB/OLq/Srh8M9zWXNMBGOBgF7AvCZ/vrsN7SSa6TjTAAGaQbaiCoa/lUsC4gsWAdr52t1mDu0lzcObgVa9al98gIQqB4qB6odrij+osQZPEK+rr2f+Nackju6rtaeDzZ/7oUeFKtvz4l55eBW5AyrxysOe2+Xmbv5Ej3sM442/Y4E0gNqC7uWiFSrvHcapJRDyQ0GA6D6iJo3L7mR8I+9xn82iIBv6vEZ0wLijw1bRlYAVHTHEdD3aWWweZMDSoUTkowBAZ9t29ZCBtFydXRbI6kZx0uU6SXvXgtr1aL6gLjaExyT/NZsEh1efiA61KVuAwHHiiE2e1lLhEeSE3ILmEbjB9iAQQXocnK6fTOxMwruhhqU60eBDFXnud3if8CxhtqLhVfXVrWTz6gxmIji5KgVcGKcT9iuFvJGzZ0mUhjcqGefujZeYX+HnNwQ/VyYW7xqaoPbC70a4vuLxrXpBDsWZXuNs6r1zT1UL8m3HjehTR9hoS7hPNvFyNzbVPVtdI6sfdBq96gnYg0CpK4us6viLe/Gtc0TlGf7Fcd5g==
+        bindPassword: AgCkt+KQQEzBUQ3Ioik/GZ2lKht1iC5RTZ0TLBJLuReLWL/ni0CncYe1eTPrqTRLp4X9NGvFzcT5wcH1IqwQUnhG+d8Klv/ev+rkkdveqK7DM+HifWZCLvOLn/IMs6e0OGd1ad0noL3zqf41PWasveEbjxp/AgOjny11YJztaUUam/B/4KyQNFG5hcgQLtauGH/eDaPojnhJuaCdPYgkaoBnby96Y7nqnipFvj6iYXsQ3wspOpgdYY4OicKrO8agrnXWhMR4yiCoHFfo2I2iDw70zWfOxGNc1GBnzqzAWv3bUaAhmUs02eSOYsUzMx5iXSToPiBcIAylg6dPdBELLlf+mbzlYvzlMeZw+e/iVwGOLv+a1DCJi1OdiD9vcfMM6cWdWwaWqgcxjmvWo+RpMBXMPWoL7lAp4lG3SngFKLHidiiYZ5kIR74zoLszMEhccTPsXSW7l4I9pxyDznsR08FLiozjlbCkWiE57TZFDlAT7mGCmyPvgMejYLQkCKAE41UQrD/KJQfO6Qm5bMy+rB+3riIgR4tEp8+Ynq0jeKcIxpmbuawK27SGuq4ZFE1xz/mttm5rQR/Rqt5MYi+2J82ioCj0M9U1xVhpQyTg3tbbzChuF6an2zsAsrpXjUbs+jQv92N1TOsNNSKohqpPp2cYj6ZqpT3g0w2LKImiYQc/iLabgn3xejEQzz+IZEcAQNefw9YhWqunN+vGxA==
       template:
         metadata:
+          annotations:
+            sealedsecrets.bitnami.com/cluster-wide: "true"
+          creationTimestamp: null
           name: ldap-secret
           namespace: ${GROUP_SYNCER_NAMESPACE}
   - kind: ConfigMap

@@ -19,30 +19,40 @@ objects:
   - kind: SealedSecret
     apiVersion: bitnami.com/v1alpha1
     metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      creationTimestamp: null
       name: ldap-readonly-pwd
       namespace: ${OPENLDAP_NAMESPACE}
     spec:
       encryptedData:
-        LDAP_READONLY_USER_PASSWORD: AgBAVxd3ZijBax18XNZNgRAWihqVhmxtQl7EmPTSYgqIF3+kIpwNFW4B8DtyXCaVX7Xl+Pj/g6YZxf6TYtk9pVlyQ92brD3xxmR16Cd3HFWDTbvrRhyAvVrWGHfB5wAxLbWIs7gS/3vp0Fp9z0TF18OvZutom0wyuBNJB5olAdzDQalhtLQKfmyfAfIKI+FFDBECsjYzWJfxSXuAK3EABvUMJDvS7vArNPYj+VLdvR0LfjO02crD1dy37Co3nGaK+Pt6A11RY/h+GJIaqq+2E8vHXX7S6YQo/mLh0TRyw2vWSF/oF+ehkp/Zx9t9/vABp2SqcaXKPJ9SLVmjwzNYu/Vg5LsCSVTypnFB4ub73qDzJsm1Pns3y0U+g38bXXHTatDJlGtUtpPDvChJ08LW/YnXvIzO6cZnlH3odD5/1mt8Pb10qlhDmAZv9boTQiiKpCNVga33mDrRNcZmOJNBf2KUzZkeqyOzcblDVPZ8I0U5LlPi5RHf2hVbRsHSxg9JxMSR++ywuI9LGpRpdjhsjtq00zx99HzLSdr80ViAcdqWdWR1yjJEj1jkZ+/kRgbJxXnHnM7oBCsI4mO/xZa1tjppIL2bu5AKEIE88pD0o74/OSt3opnWdNVOfLqg8By0pPx6NXdSoBcPgbOH/g3ID2lhcqe2eZadmaJ+RQ0qbSz1RxsHTrLMTj7Rw4mn2/O2tJ2kT3GEhgIIJNqfFQ==
+        LDAP_READONLY_USER_PASSWORD: AgANImLIn7RgNmKnvPP5hDZrVKHu+Em5mapwULWrFvQXO6voaGAlM7Q9XRkOkq3e9TgazojRz/AMW2lGCg8VWkbqGUjTWXUzBt2W0jgdm1yTOTmOc41BHasqKjUIEKy0woSQt497UN6pQdY2peM423PufKP4yhQb6EprV14hXhVwPgsYD/txHaizYd9qU3ML5edwQM2zmQU7futc6Pn52PmhGT1kpdQ+oxWAFz6pFt5d0C/LoDbw3qO6W8l98WK70chvmm4r9Y7EzlXaNLQP4NoxKIhNcYwocKSUDQHzOvy/OHmVKzJOaDz5lGyuxCmvwFHxA1jBfFnSS7A1kW26l7buHcTjW4HlsmQxGF5nq2BEY1kPNgfBzbiHj7/FBJUr6lTTcqlUL9Jbb3HrxszZOMmXcVg1haWqZiL/1YF1/+NnuP8AKmkj9Ro0/OuyrzdSg+b4eqmT7LGzQMTcJtXsDdI/IPmLRmzz+UQ7cTpcSHY+41ofWBkbMSljNEWaYNvPRlqeWJsZlZJ/UFscpa7idKu6T9REw+Ya5khTKeuTzo4zuyjWIST6Q0WMKI0YFQ49CKS4GpX6BCwWtZIb6fqUYhDgwuNRwwswHqqiTmQhlBuVAaryteAX98oUPc5bQp+VqKKizyv32wzJm88c4FtgHR7UWt4SzeFm37mZjpsGJYI6kgPTlVUL9IyRSYaqSJZBwXcbqNunqW169t+0rA==
       template:
         metadata:
+          annotations:
+            sealedsecrets.bitnami.com/cluster-wide: "true"
+          creationTimestamp: null
           name: ldap-readonly-pwd
           namespace: ${OPENLDAP_NAMESPACE}
-    
+
   - kind: SealedSecret
     apiVersion: bitnami.com/v1alpha1
     metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      creationTimestamp: null
       name: ldap-admin-pwd
       namespace: ${OPENLDAP_NAMESPACE}
     spec:
       encryptedData:
-        LDAP_ADMIN_PASSWORD: AgBvg77CQmNqhEV/S/PCuWW120rVS77svet+3NxuUiPOb3dzEIaxx7KSy4SIBFKbXBCLiiL2SPF+ciYh8w+ltCyu8UlU3P69ye8B76icNNCJxLR0ygygkFkLc0x4xBoD5QN+46c+aSSVMQgA5Eqbey6L/vGndbAi2pbNxjinwiqPFkW1hMDiNFxyicLROXrBBzaxjIWYRVWjbojTmgMF0zqhsMIn3wqh8vYujeDNFvIwwcjTt/ufpLAxILaJXDNNZi/AfoC1MVGIxaJo0YitQFlyIrfTl7G6oLYlknO0QaMhTo+J/9hU9EwltHvTqnNBgynP8bD0HmJHb2zVkdbAxk2k6Doc9gZWplnDhQOEHr3rPzqIvhWBKpOxLB+1Bd2uC30sC0Ym6W3iK/bNI7QvOz2cGQc3Vvu4bxmNCZe70MlBY8DqyYyrAElsS+i6gE2r6cjnV0GPu6XSrN8Oycy7uokMZW4njRriGW0FNDq8QmzlnngNrtOdyL0DNiMQc7TydDAVEi8HV2IWHxUPdWEtxE+2kRCL4shCQmS+3ubUUsoXsAyzJKTB58nbl6l8hC/vwZkEKl4n5LJ5oTrOeuIg/rIgY4q6GFaH5mqOe8Q4dItj6cUaBlbWGymFIMXV5a05hwrlcyWjamsHSoq3E2bFe8JzJP+hVdxTUjvLi3xb060EdnnSAWcWkpsGZfrJXpLhlPDWwthzuowong==
+        LDAP_ADMIN_PASSWORD: AgCVjt2GIv0ZfNV+akpvTC5E+rnjZGDpSL4KNMWu43W1D+xbtYYm70h0fllDM+FhCrFn6DAl9vVqttzW/3uQgle1nDCoCmMdrvSE3P7bHWrSESMJoYnoXta+JgNB4q6It+oeQ/5YwhBE2afIKZuPAdCWUnvoiel01Fbbo1o+2SZw6LzBNsFXnioqNhelan6GOCDKAFeWRlyXxmSyYgN94lt/hi4Xns5Xjyr5RWB2N0JaboVqqPwffRwZ+2D6daEyy5TczZwNlX+jR9QavrlDBRtNR64A8WDN1yUCdPhQ/x30mbYS+5xAgJI+XiV37XuR/s3AVfszqIH2ehrrorMCCX2fIOCyDQ0zCU4ViMKzjHa8AxMD0vrpF8RgtQrJFw5zUjHVqeEOpKYMv01yU94VtYIpP4nC9klBISy1awiieo8PqNke5lOk0uszNz2SqCBxZLnw6mgiwb9QA2eJO7pb6ewLR/gh9c/85u2ldzmmxBwSpfL1IZCg+fBHD15Aj891LmF+aXzipkoRiA4DWBmOXg331CpJBZMxI2Ql3sjjBa4os+JpEq4Wa82DzaZ2QXgRzAvyu7X+qohoAr/bbZjK2GRd+9xzhFWlRYJd27pHwYykCCqFBCKNlniqxttnghZOjeJLN4bhDKPq29vucB4r/nAJfpQqz+zRxxRX467FIdWJkUWRYTgRaOgHuF2CCvFoofDo4EMTbDj1Cg==
       template:
         metadata:
+          annotations:
+            sealedsecrets.bitnami.com/cluster-wide: "true"
+          creationTimestamp: null
           name: ldap-admin-pwd
           namespace: ${OPENLDAP_NAMESPACE}
-
-
 
   # ConfigMap
   - kind: ConfigMap

@@ -37,16 +37,22 @@ objects:
   - kind: SealedSecret
     apiVersion: bitnami.com/v1alpha1
     metadata:
+      annotations:
+        sealedsecrets.bitnami.com/cluster-wide: "true"
+      creationTimestamp: null
       name: vault-password
       namespace: ${ANSIBLE_NAMESPACE}
     spec:
       encryptedData:
-        vault-password.txt: AgCdoLpyERUB3Cg+gVTXd7Y+o5absCA46NBmh8xyC//VgaDpTNmu4xzwHF7yG2vxFSPPsHk5dqnZTtricBPG+gNcODGm11pA5R6aU8sFRk0f4P0K9jq4y48DKTlLBezAKdfIGQ/vF5AnTs6phDnkt4iG1kCszlmmb9XWielOsotTTTx7dhXAqAz2n+NcUYfzAKeBc6TNna45ZF+VcY5qzVXzDbGsatKeUEn4DmwTP7ap5Kqeo89MyZw91UWBc6LRA1Bw3S1d5r1halMQzt85Is13DnOb7ZxHMDuuekX19lPOs/IuUcJ7dfWpLDaY84Tx59+GrnAfm+XQhScawSXzU6YCIBocZJgxxWR0iVUvzOVD2wDku2J9yRhLLvmTs1CMyY+mxVVbToP+ItPw1gLOhaHVLNF8oe//XmZ3kISq7lVcoOFQZd9eXlq1ZDiwaM+PSRW9XSUAU1dTRiIUNC9VY0+gIrb5UyWAzAUCNIpbJUj704CA0Otatl3sII2Qbvo10kir6H8eEjhRl/w2bO9MPL8sQxYVRbrUKqQFtOOv/a6DPNjQsAFWSbefJwqJQ3Tcv3dnoGnvX3O6i+VrrbX1Yy18ryqsaNhftTCnAPtUTonBEhuoqhhKy4hMviNrkxCwF9Ud606Sg6uFAljpVRFzOAEgPVmGicE4ieTpJFIl54oOyX7wurkn0652R5Z1Gl6pMU68Q+VTJsFn7oSnug==
+        vault-password.txt: AgAZfzZtkR/ws4y/DLqylA5evTWTypIkUd5y5IX4JKUEBzxx1sI15v90vTpus2n6DlpFBt7hZDmTnjZj15x5oXUiVQeYJ8hyItDnRKlB+D57dRVO8m3vWWTofXxNNhe6J9fwrXLmQM11aZ9016T44WWLTdxj+HTdSJJmOUmUEk0r0n39kbzKL5L81fYwisEZhUHeubrIMJLrHbJmoPVDSZke05qK6RcYG4CAtWifA4bnIBn0KowSdnph9pG3UAYKmG8qG2hAh1YlbjSiBO7Jj0lIzbKGs6Wivtofb4Z2gWxNGvjf4yeWFT2lC74vdIknl7QDf735savJGXDgChcNKI2eTTjqcFXJ5lXdmPxnPGwZhgmpr3AZTiJyy0JPnJVYWZIPvQiQfO1hKZlQmkCrTQXJvO94um+7uL1ycEU8v+++NrIKMXMduA0oJsT4cGiq+AJ7z/VxPLvEQAGXZom7T0ihP/Rlxz17cwjiLqey2EvNYHurv/M12jMH+Ne2oDvA9zbsGwB4lfJ8JW2SWXZ/fLtrg1QlDbBvMJjXdSZe9VtxlTINyQVjCy0CwhVSebw5Q98NI4OZb2cr+mkeT4G6qzsc0sMSbovGozspW/fltzvDxqg7X1sGbdRw/nzzEUCK5b9P0uG7IQ8JGfNfQNholRE7+VNszfaJzzxd0UGzj7fWpHHvvTjeJW6MYGX6tTzbKK8zBcuMIhRFYbu6Og==
       template:
         metadata:
+          annotations:
+            sealedsecrets.bitnami.com/cluster-wide: "true"
+          creationTimestamp: null
           name: vault-password
           namespace: ${ANSIBLE_NAMESPACE}
-
+    
   - apiVersion: batch/v1
     kind: Job
     metadata:

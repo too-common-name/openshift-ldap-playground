@@ -43,21 +43,20 @@ cleanup() {
   fi 
   oc delete secret/ldap-secret -n openshift-config &>> $LOG_FILE
   
-  echo -e "${YELLOW} ⚠ Deleting resources for OpenLDAP from template...${NC}"
+  echo -e "${YELLOW} ⚠ Deleting resources for OpenLDAP...${NC}"
   oc process -f deployments/openldap/openldap-template.yaml -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
-  echo -e "${YELLOW} ⚠ Deleting resources for phpLDAPadmin from template...${NC}"
+  echo -e "${YELLOW} ⚠ Deleting resources for phpLDAPadmin...${NC}"
   oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
-  echo -e "${YELLOW} ⚠ Deleting resources for Ansible Automation Environment from template...${NC}"
+  echo -e "${YELLOW} ⚠ Deleting resources for Ansible Automation Environment...${NC}"
   oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
-  echo -e "${YELLOW} ⚠ Deleting resources for group syncer cronjob from template...${NC}"
+  echo -e "${YELLOW} ⚠ Deleting resources for group syncer cronjob...${NC}"
   oc process -f deployments/group-syncer/group-syncer-template.yaml -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
-  echo -e "${YELLOW} ⚠ Deleting Sealed Secrets resources using Kustomize...${NC}"
-  oc delete -k deployments/sealed-secrets &>> $LOG_FILE
-  oc delete project "$SEALED_SECRETS_NAMESPACE" --grace-period=0 --force &>> $LOG_FILE
+  echo -e "${YELLOW} ⚠ Deleting Sealed Secrets resources...${NC}"
+  oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc delete -f - &>> $LOG_FILE
 }
 
 check_oc_installed() {
@@ -75,12 +74,8 @@ login_to_openshift() {
 }
 
 install_sealed_secret() {
-  echo -e "${BLUE} ➜ Creating Sealed Secrets namespace...${NC}"
-  oc new-project $SEALED_SECRETS_NAMESPACE &>> $LOG_FILE
-  handle_error "Failed to create Sealed Secrets project"
-  
   echo -e "${BLUE} ➜ Installing Sealed Secrets...${NC}"
-  oc create -k deployments/sealed-secrets/ &>> $LOG_FILE
+  oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to install Sealed Secrets"
 }
 
