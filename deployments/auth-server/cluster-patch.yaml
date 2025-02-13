@@ -15,7 +15,7 @@
       bindPassword:
         name: ldap-secret
       insecure: true
-      url: 'ldap://openldap.openldap.svc.cluster.local:389/ou=people,dc=wayneenterprises,dc=org?uid?sub?(|(memberOf=cn=devops,ou=groups,dc=wayneenterprises,dc=org)(memberOf=cn=developers,ou=groups,dc=wayneenterprises,dc=org))'
+      url: 'ldap://openldap.openldap.svc.cluster.local:389/ou=people,dc=wayneenterprises,dc=org?uid?sub?(|(memberOf=cn=devops,ou=groups,dc=wayneenterprises,dc=org)(memberOf=cn=developers,ou=groups,dc=wayneenterprises,dc=org)(memberOf=cn=admins,ou=groups,dc=wayneenterprises,dc=org))'
     mappingMethod: claim
     name: Wayne Enterprise LDAP 
     type: LDAP
