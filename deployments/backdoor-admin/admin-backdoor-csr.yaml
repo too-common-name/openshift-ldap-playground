@@ -1,0 +1,21 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: admin-backdoor-csr-template
+  annotations:
+    description: "Template to deploy a CertificateSigningRequest"
+parameters:
+  - name: BASE64_CSR
+    displayName: "Certs Folder"
+    required: true
+objects:
+  - apiVersion: certificates.k8s.io/v1
+    kind: CertificateSigningRequest
+    metadata:
+      name: admin-backdoor-access
+    spec:
+      signerName: kubernetes.io/kube-apiserver-client
+      expirationSeconds: 315360000  # 10 years
+      request: ${BASE64_CSR}
+      usages:
+      - client auth

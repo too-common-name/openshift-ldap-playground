@@ -1,1 +1,5 @@
 deployment.log
+
+deployments/backdoor-admin/certs/
+
+deployments/backdoor-admin/admin-backdoor.config

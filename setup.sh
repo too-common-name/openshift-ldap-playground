@@ -24,6 +24,7 @@ GROUP_SYNCER_NAMESPACE=group-syncer
 
 OC_COMMAND=$(command -v oc)
 LOG_FILE="deployment.log"
+CERTS_FOLDER=deployments/backdoor-admin/certs
 
 handle_error() {
   local exit_code=${2:-$?}
@@ -57,6 +58,16 @@ cleanup() {
 
   echo -e "${YELLOW} ⚠ Deleting Sealed Secrets resources...${NC}"
   oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc delete -f - &>> $LOG_FILE
+
+  echo -e "${YELLOW} ⚠ Deleting Backdoor admin resources...${NC}"
+  remove_backdoor_admin_kubeconfig &>> $LOG_FILE
+}
+
+remove_backdoor_admin_kubeconfig() {
+  oc adm policy remove-cluster-role-from-group cluster-admin backdoor-administrators
+  oc delete group/backdoor-administrators
+  oc delete csr/admin-backdoor-access
+  rm -rf $CERTS_FOLDER
 }
 
 check_oc_installed() {
@@ -118,6 +129,44 @@ configure_group_sync() {
   handle_error "Failed to deploy group sync cronjob from template"
 }
 
+add_cluster_admin_role() {
+  echo -e "${BLUE} ➜ Adding cluster-admin role to admins group...${NC}"
+  oc adm policy add-cluster-role-to-group cluster-admin admins &>> $LOG_FILE
+  handle_error "Failed to add cluster-admin role to admins"
+}
+
+create_backdoor_admin_kubeconfig() {
+  CSR_NAME=admin-backdoor.csr
+  ADMIN_BACKDOOR_CRT_NAME=admin-backdoor-access.crt
+  KUBECONFIG_FILE=deployments/backdoor-admin/admin-backdoor.config
+  CLIENT_KEY_NAME=tls.key
+  APISERVER_CERT=ocp-apiserver-cert.crt
+  URL_WITHOUT_PROTOCOL=$(echo "$OPENSHIFT_URL" | sed 's|^https://||')
+  oc adm groups new backdoor-administrators &>> $LOG_FILE
+  oc adm policy add-cluster-role-to-group cluster-admin backdoor-administrators &>> $LOG_FILE
+  mkdir $CERTS_FOLDER
+  openssl req -newkey rsa:4096 -nodes -keyout $CERTS_FOLDER/$CLIENT_KEY_NAME -subj "/O=backdoor-administrators/CN=admin-backdoor" -out $CERTS_FOLDER/$CSR_NAME &>> $LOG_FILE
+  oc process -f deployments/backdoor-admin/admin-backdoor-csr.yaml -p BASE64_CSR=$(base64 -w0 $CERTS_FOLDER/$CSR_NAME) | oc apply -f - &>> $LOG_FILE
+  oc adm certificate approve admin-backdoor-access &>> $LOG_FILE
+  oc get csr admin-backdoor-access -o jsonpath='{.status.certificate}' | base64 -d > $CERTS_FOLDER/$ADMIN_BACKDOOR_CRT_NAME
+  oc config set-credentials admin-backdoor \
+  --client-certificate $CERTS_FOLDER/$ADMIN_BACKDOOR_CRT_NAME \
+  --client-key $CERTS_FOLDER/$CLIENT_KEY_NAME \
+  --embed-certs --kubeconfig $KUBECONFIG_FILE &>> $LOG_FILE
+  openssl s_client -showcerts \
+  -connect $URL_WITHOUT_PROTOCOL </dev/null 2>/dev/null|openssl x509 \
+  -outform PEM > $CERTS_FOLDER/$APISERVER_CERT
+  oc config set-cluster $URL_WITHOUT_PROTOCOL \
+    --certificate-authority $CERTS_FOLDER/$APISERVER_CERT --embed-certs=true \
+    --server $OPENSHIFT_URL \
+    --kubeconfig $KUBECONFIG_FILE &>> $LOG_FILE
+  oc config set-context admin-backdoor \
+    --cluster $URL_WITHOUT_PROTOCOL \
+    --namespace default --user admin-backdoor \
+    --kubeconfig $KUBECONFIG_FILE &>> $LOG_FILE
+  oc config use-context admin-backdoor \
+    --kubeconfig $KUBECONFIG_FILE &>> $LOG_FILE
+}
 
 if [ "$ACTION" == "cleanup" ]; then
   echo -e "${BLUE} ➜ Performing cleanup...${NC}"
@@ -133,5 +182,7 @@ else
   populate_ldap_server
   configure_oauth_server
   configure_group_sync
+  add_cluster_admin_role
+  create_backdoor_admin_kubeconfig
   echo -e "${GREEN} ✔ Setup completed successfully.${NC}"
 fi
