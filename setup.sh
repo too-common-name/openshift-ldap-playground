@@ -45,19 +45,26 @@ cleanup() {
   oc delete secret/ldap-secret -n openshift-config &>> $LOG_FILE
   
   echo -e "${YELLOW} ⚠ Deleting resources for OpenLDAP...${NC}"
-  oc process -f deployments/openldap/openldap-template.yaml -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
+  oc process -f deployments/openldap/openldap-template.yaml \
+  -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting resources for phpLDAPadmin...${NC}"
-  oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
+  oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml \
+  -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE \
+  -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE \
+  -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting resources for Ansible Automation Environment...${NC}"
-  oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc delete -f - &>> $LOG_FILE
+  oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml \
+  -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting resources for group syncer cronjob...${NC}"
-  oc process -f deployments/group-syncer/group-syncer-template.yaml -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc delete -f - &>> $LOG_FILE
+  oc process -f deployments/group-syncer/group-syncer-template.yaml \
+  -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting Sealed Secrets resources...${NC}"
-  oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc delete -f - &>> $LOG_FILE
+  oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml \
+  -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting Backdoor admin resources...${NC}"
   remove_backdoor_admin_kubeconfig &>> $LOG_FILE
@@ -86,13 +93,15 @@ login_to_openshift() {
 
 install_sealed_secret() {
   echo -e "${BLUE} ➜ Installing Sealed Secrets...${NC}"
-  oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  oc process -f deployments/sealed-secrets/sealed-secrets-template.yaml \
+  -p SEALED_SECRET_NAMESPACE=$SEALED_SECRETS_NAMESPACE | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to install Sealed Secrets"
 }
 
 create_openldap_server() {
   echo -e "${BLUE} ➜ Processing OpenLDAP Template...${NC}"
-  oc process -f deployments/openldap/openldap-template.yaml -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  oc process -f deployments/openldap/openldap-template.yaml \
+  -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to deploy OpenLDAP from template"
   
   echo -e "${BLUE} ➜ Waiting for LDAP server to be deployed...${NC}"
@@ -102,13 +111,17 @@ create_openldap_server() {
 
 create_phpldapadmin() {
   echo -e "${BLUE} ➜ Processing phpLDAPadmin Template...${NC}"
-  oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  oc process -f deployments/phpldapadmin/phpldapadmin-template.yaml \
+  -p PHPLDAPADMIN_NAMESPACE=$PHPLDAPADMIN_NAMESPACE \
+  -p OPENLDAP_NAMESPACE=$OPENLDAP_NAMESPACE \
+  -p OPENLDAP_APP_SVC=$OPENLDAP_NAMESPACE | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to deploy phpLDAPadmin from template"
 }
 
 populate_ldap_server() {
   echo -e "${BLUE} ➜ Processing automation environment Template...${NC}"
-  oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml \
+  -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to deploy automation environment from template"
 
   echo -e "${BLUE} ➜ Waiting for automation job to complete...${NC}"
@@ -118,14 +131,16 @@ populate_ldap_server() {
 
 configure_oauth_server() {
   echo -e "${BLUE} ➜ Patching OAuth server...${NC}"
-  oc get oauth/cluster -n openshift-config -o yaml | yq e "del(.metadata.annotations, .metadata.ownerReferences, .metadata.resourceVersion, .metadata.uid, .metadata.generation)" > deployments/auth-server/oauth-cluster.yaml
+  oc get oauth/cluster -n openshift-config -o yaml | \
+  yq e "del(.metadata.annotations, .metadata.ownerReferences, .metadata.resourceVersion, .metadata.uid, .metadata.generation)" > deployments/auth-server/oauth-cluster.yaml
   oc apply -k deployments/auth-server &>> $LOG_FILE
   handle_error "Failed to patch OAuth server"
 }
 
 configure_group_sync() {
   echo -e "${BLUE} ➜ Creating group sync cronjob...${NC}"
-  oc process -f deployments/group-syncer/group-syncer-template.yaml -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  oc process -f deployments/group-syncer/group-syncer-template.yaml \
+  -p GROUP_SYNCER_NAMESPACE=$GROUP_SYNCER_NAMESPACE | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to deploy group sync cronjob from template"
 }
 
@@ -145,10 +160,13 @@ create_backdoor_admin_kubeconfig() {
   oc adm groups new backdoor-administrators &>> $LOG_FILE
   oc adm policy add-cluster-role-to-group cluster-admin backdoor-administrators &>> $LOG_FILE
   mkdir $CERTS_FOLDER
-  openssl req -newkey rsa:4096 -nodes -keyout $CERTS_FOLDER/$CLIENT_KEY_NAME -subj "/O=backdoor-administrators/CN=admin-backdoor" -out $CERTS_FOLDER/$CSR_NAME &>> $LOG_FILE
-  oc process -f deployments/backdoor-admin/admin-backdoor-csr.yaml -p BASE64_CSR=$(base64 -w0 $CERTS_FOLDER/$CSR_NAME) | oc apply -f - &>> $LOG_FILE
+  openssl req -newkey rsa:4096 -nodes -keyout $CERTS_FOLDER/$CLIENT_KEY_NAME \
+  -subj "/O=backdoor-administrators/CN=admin-backdoor" -out $CERTS_FOLDER/$CSR_NAME &>> $LOG_FILE
+  oc process -f deployments/backdoor-admin/admin-backdoor-csr.yaml \
+  -p BASE64_CSR=$(base64 -w0 $CERTS_FOLDER/$CSR_NAME) | oc apply -f - &>> $LOG_FILE
   oc adm certificate approve admin-backdoor-access &>> $LOG_FILE
-  oc get csr admin-backdoor-access -o jsonpath='{.status.certificate}' | base64 -d > $CERTS_FOLDER/$ADMIN_BACKDOOR_CRT_NAME
+  oc get csr admin-backdoor-access -o jsonpath='{.status.certificate}' | \
+  base64 -d > $CERTS_FOLDER/$ADMIN_BACKDOOR_CRT_NAME
   oc config set-credentials admin-backdoor \
   --client-certificate $CERTS_FOLDER/$ADMIN_BACKDOOR_CRT_NAME \
   --client-key $CERTS_FOLDER/$CLIENT_KEY_NAME \
