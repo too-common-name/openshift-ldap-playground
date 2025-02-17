@@ -90,7 +90,7 @@ objects:
                 derefAliases: never
                 filter: (objectclass=inetOrgPerson)
                 pageSize: 0
-            userNameAttributes: [ mail ] 
+            userNameAttributes: [ uid ] 
             groupMembershipAttributes: [ memberOf ] 
   - kind: CronJob
     apiVersion: batch/v1
