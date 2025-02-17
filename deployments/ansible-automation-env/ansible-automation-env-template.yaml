@@ -77,7 +77,7 @@ objects:
               image: "docker.io/alpine/ansible:2.16.1"
               args:
               - "ansible-playbook"
-              - "/repo/ansible-day2/populateldap.yaml"
+              - "/repo/ansible/populateldap.yaml"
               - "--vault-password-file"
               - "/vault/vault-password.txt"
               volumeMounts:

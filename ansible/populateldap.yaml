@@ -24,7 +24,7 @@
           - python-ldap
           - passlib # crypt will be removed starting from 2.17
         state: present
-    - name: Creazione dei nodi LDAP
+    - name: LDAP node creation
       community.general.ldap_entry:
         dn: "{{ item.dn }}"
         objectClass: "{{ item.object_class }}"
