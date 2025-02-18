@@ -25,6 +25,7 @@ GROUP_SYNCER_NAMESPACE=group-syncer
 OC_COMMAND=$(command -v oc)
 LOG_FILE="deployment.log"
 CERTS_FOLDER=deployments/backdoor-admin/certs
+ANSIBLE_REPOSITORY=https://github.com/too-common-name/openshift-ldap-playground.git
 
 handle_error() {
   local exit_code=${2:-$?}
@@ -56,7 +57,8 @@ cleanup() {
 
   echo -e "${YELLOW} ⚠ Deleting resources for Ansible Automation Environment...${NC}"
   oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml \
-  -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc delete -f - &>> $LOG_FILE
+  -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE \
+  -p ANSIBLE_REPOSITORY=$ANSIBLE_REPOSITORY | oc delete -f - &>> $LOG_FILE
 
   echo -e "${YELLOW} ⚠ Deleting resources for group syncer cronjob...${NC}"
   oc process -f deployments/group-syncer/group-syncer-template.yaml \
@@ -121,7 +123,8 @@ create_phpldapadmin() {
 populate_ldap_server() {
   echo -e "${BLUE} ➜ Processing automation environment Template...${NC}"
   oc process -f deployments/ansible-automation-env/ansible-automation-env-template.yaml \
-  -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE | oc apply -f - &>> $LOG_FILE
+  -p ANSIBLE_NAMESPACE=$AUTOMATION_NAMESPACE \
+  -p ANSIBLE_REPOSITORY=$ANSIBLE_REPOSITORY | oc apply -f - &>> $LOG_FILE
   handle_error "Failed to deploy automation environment from template"
 
   echo -e "${BLUE} ➜ Waiting for automation job to complete...${NC}"

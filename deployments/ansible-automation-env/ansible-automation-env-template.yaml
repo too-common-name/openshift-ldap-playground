@@ -8,6 +8,9 @@ parameters:
   - name: ANSIBLE_NAMESPACE
     displayName: "Ansible Namespace"
     required: true
+  - name: ANSIBLE_REPOSITORY
+    displayName: "Repository with the Ansible playbook to execute"
+    required: true
 objects:
   - kind: Project
     apiVersion: project.openshift.io/v1
@@ -67,7 +70,7 @@ objects:
               image: "docker.io/alpine/git:v2.47.1"
               args:
               - clone
-              - https://github.com/too-common-name/openshift-ldap-playground.git 
+              - ${ANSIBLE_REPOSITORY}
               - /repo
               volumeMounts:
                 - name: git-repo-volume
